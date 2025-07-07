@@ -30,7 +30,7 @@ def process_filename(filename, prefix=None, postfix=None, remove_str=None, perfo
             new_name_part = new_name_part.replace(char, ' ')
 
         # Define characters to remove completely
-        chars_to_remove = ['(', ')', '[', ']', '{', '}']
+        chars_to_remove = ['h265', 'x265', '{', '}', 'x264', 'h264', 'H265', 'X265', 'H264', 'X264', 'WEBRIP', 'WEBRip', 'webrip', 'BlueRay', 'blueray', 'BLUERAY', 'HDR', 'hdr', 'HEVC', 'hvec' ]
         for char in chars_to_remove:
             new_name_part = new_name_part.replace(char, '')
         
