@@ -1,4 +1,5 @@
 import os
+import re # Import the re module
 import sys
 import argparse
 
@@ -24,23 +25,35 @@ def process_filename(filename, prefix=None, postfix=None, remove_str=None, perfo
 
     # 4. Perform a general cleanup of common unwanted characters
     if perform_clean:
-        # Define characters to replace with a space
-        chars_to_replace = ['_', '.', '-']
-        for char in chars_to_replace:
-            new_name_part = new_name_part.replace(char, ' ')
+        # Define characters to replace with a space using a regex pattern
+        # This will replace one or more occurrences of these characters with a single space
+        # Added '\' before '-' to escape it in the regex character set
+        new_name_part = re.sub(r'[_.\-]+', ' ', new_name_part)
 
-        # Define characters to remove completely
-        chars_to_remove = ['h265', 'x265', '{', '}', 'x264', 'h264', 'H265', 'X265', 'H264', 'X264', 'WEBRIP', 'WEBRip', 'webrip', 'BlueRay', 'blueray', 'BLUERAY', 'HDR', 'hdr', 'HEVC',
-        'hvec', 'WEB-DL', 'DD5.1', '5.1', 'CMRG', '[TGx]', 'AV1', 'Opus']
-        for char in chars_to_remove:
-            new_name_part = new_name_part.replace(char, '')
+        # Define strings to remove completely using a regex pattern
+        # The re.IGNORECASE flag makes the matching case-insensitive
+        # Sort by length descending to ensure longer patterns are matched first
+        chars_to_remove = [
+            'WEBRIP', 'WEB-DL', 'BlueRay', 'BLUERAY', 'DD5.1', 'CMRG',
+            '[TGx]', 'H265', 'X265', 'H264', 'X264', 'HEVC', 'blueray', 'webrip',
+            'hvec', 'HDR', 'hdr', 'AV1', 'Opus', '5.1', 'h265', 'x265', 'x264', 'h264'
+        ]
         
+        # Create a regex pattern that matches any of the strings to remove, case-insensitively
+        # We need to escape characters like '[' and ']' that have special meaning in regex
+        # Use a non-capturing group (?:...) for better performance
+        pattern_to_remove = r'|'.join([re.escape(s) for s in sorted(chars_to_remove, key=len, reverse=True)])
+        new_name_part = re.sub(pattern_to_remove, '', new_name_part, flags=re.IGNORECASE)
+        
+        # Remove any remaining curly braces specifically
+        new_name_part = new_name_part.replace('{', '').replace('}', '')
+
         # Consolidate multiple spaces into a single space and remove leading/trailing whitespace
-        new_name_part = " ".join(new_name_part.split())
+        new_name_part = " ".join(new_name_part.split()).strip() # Added .strip() at the end
 
     # Return the new filename only if a change was made
     if new_name_part != name_part:
-        return new_name_part.strip() + extension
+        return new_name_part.strip() + extension # Ensure stripping happens before adding extension
     else:
         return filename
 
@@ -98,7 +111,7 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--remove", dest="remove_str", help="A string to remove from anywhere within filenames.")
     
     # Changed --clean to be a flag that stores True if present
-    parser.add_argument("-c", "--clean", action="store_true", help="Perform a general cleanup (replaces '_', '.', '-' with spaces and removes brackets).")
+    parser.add_argument("-c", "--clean", action="store_true", help="Perform a general cleanup (replaces '_', '.', '-' with spaces and removes common unwanted strings).")
     
     args = parser.parse_args()
 
