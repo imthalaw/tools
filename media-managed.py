@@ -34,9 +34,9 @@ def process_filename(filename, prefix=None, postfix=None, remove_str=None, perfo
         # The re.IGNORECASE flag makes the matching case-insensitive
         # Sort by length descending to ensure longer patterns are matched first
         chars_to_remove = [
-            'WEBRIP', 'WEB-DL', 'BlueRay', 'BLUERAY', 'DD5.1', 'CMRG',
-            '[TGx]', 'H265', 'X265', 'H264', 'X264', 'HEVC', 'blueray', 'webrip',
-            'hvec', 'HDR', 'hdr', 'AV1', 'Opus', '5.1', 'h265', 'x265', 'x264', 'h264'
+            'web-dl', 'blueray', 'dd5.1', 'cmrg',
+            '[tgx]', 'hevc', 'webrip', 'hdr', 'av1', 'opus', 
+            '5.1', 'h265', 'x265', 'x264', 'h264'
         ]
         
         # Create a regex pattern that matches any of the strings to remove, case-insensitively
