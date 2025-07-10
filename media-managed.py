@@ -102,7 +102,7 @@ def rename_files_in_directory(directory, prefix=None, postfix=None, remove_str=N
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Recursively strip prefixes, postfixes, or any substring from filenames.",
-        epilog="Example: python your_script.py ./my_files --prefix \"DRAFT-\" --clean"
+        epilog="Example: python media-managed.py ./my_files --prefix \"DRAFT-\" --clean"
     )
     
     parser.add_argument("directory", help="The target directory to scan.")
