@@ -1,5 +1,5 @@
 import os
-import re  # for working with regex and finding those patterns.
+import re
 import sys
 import argparse
 import shutil
@@ -18,7 +18,7 @@ Usage Example:
     python media-managed.py /home/awesome/yourtargetfolder --prefix "DRAFT-" --clean --mkfolders
 """
 
-def move_files_to_individual_folders(target_folder):
+def move_files_to_individual_folders(target_folder, dry_run=False):
     """
     For each file in the target folder (non-recursive), create a folder named after the file (minus extension),
     and move the file into its corresponding folder.
@@ -41,20 +41,26 @@ def move_files_to_individual_folders(target_folder):
             new_folder_path = os.path.join(target_folder, folder_name)
 
             if not os.path.exists(new_folder_path):
-                try:
-                    os.makedirs(new_folder_path)
-                    print(f"  -> Created folder: {new_folder_path}")
-                except OSError as e:
-                    print(f"  -> Error creating folder {new_folder_path}: {e}")
-                    continue
+                if dry_run:
+                    print(f"  - [DRY RUN] Would create folder: {new_folder_path}")
+                else:
+                    try:
+                        os.makedirs(new_folder_path)
+                        print(f"  -> Created folder: {new_folder_path}")
+                    except OSError as e:
+                        print(f"  -> Error creating folder {new_folder_path}: {e}")
+                        continue
             else:
                 print(f"  -> Folder '{folder_name}' already exists.")
 
-            try:
-                shutil.move(original_file_path, new_folder_path)
-                print(f"  -> Moved '{filename}' into '{new_folder_path}'\n")
-            except Exception as e:
-                print(f"  -> Error moving file {filename}: {e}\n")
+            if dry_run:
+                print(f"  - [DRY RUN] Would move '{filename}' into '{new_folder_path}'\n")
+            else:
+                try:
+                    shutil.move(original_file_path, new_folder_path)
+                    print(f"  -> Moved '{filename}' into '{new_folder_path}'\n")
+                except Exception as e:
+                    print(f"  -> Error moving file {filename}: {e}\n")
         else:
             print(f"Skipping directory: {filename}\n")
     print("Move-to-folder operation complete!")
@@ -116,7 +122,7 @@ def process_filename(filename, prefix=None, postfix=None, remove_str=None, perfo
     else:
         return filename
 
-def rename_files_in_directory(directory, prefix=None, postfix=None, remove_str=None, perform_clean=False):
+def rename_files_in_directory(directory, prefix=None, postfix=None, remove_str=None, perform_clean=False, dry_run=False):
     """
     Recursively renames files based on the provided operations.
     """
@@ -147,13 +153,15 @@ def rename_files_in_directory(directory, prefix=None, postfix=None, remove_str=N
                 if os.path.exists(new_filepath):
                     print(f"  - Skipped (conflict): Renaming '{filename}' to '{new_filename}' would overwrite an existing file.")
                     continue
-
-                try:
-                    os.rename(old_filepath, new_filepath)
-                    print(f"  - Renamed: '{filename}' -> '{new_filename}'")
-                    renamed_files_count += 1
-                except OSError as e:
-                    print(f"  - Error renaming '{filename}': {e}")
+                if dry_run:
+                    print(f"  - [DRY RUN] Would rename: '{filename}' -> '{new_filename}'")
+                else:
+                    try:
+                        os.rename(old_filepath, new_filepath)
+                        print(f"  - Renamed: '{filename}' -> '{new_filename}'")
+                        renamed_files_count += 1
+                    except OSError as e:
+                        print(f"  - Error renaming '{filename}': {e}")
 
     print("-" * 20)
     print(f"\nScan complete. Renamed {renamed_files_count} file(s).")
@@ -170,6 +178,7 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--remove", dest="remove_str", help="A string to remove from anywhere within filenames.")
     parser.add_argument("-m", "--mkfolders", action="store_true", help="For each file, create a folder (named after the file, minus extension) and move the file into it after renaming/cleaning.")
     parser.add_argument("-c", "--clean", action="store_true", help="Perform a general cleanup (replaces '_', '.', '-' with spaces and removes common unwanted strings).")
+    parser.add_argument("-d", "--dry-run", action="store_true", help="Show what would happen, but don't actually rename or move any files.")
 
     args = parser.parse_args()
 
@@ -180,8 +189,15 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # First, rename/clean files as requested
-    rename_files_in_directory(args.directory, args.prefix, args.postfix, args.remove_str, args.clean)
+    rename_files_in_directory(
+        args.directory,
+        args.prefix,
+        args.postfix,
+        args.remove_str,
+        args.clean,
+        dry_run=args.dry_run
+    )
 
     # Then, move files into individual folders if requested
     if args.mkfolders:
-        move_files_to_individual_folders(args.directory)
+        move_files_to_individual_folders(args.directory, dry_run=args.dry_run)
