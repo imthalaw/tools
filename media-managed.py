@@ -1,7 +1,50 @@
 import os
-import re # Import the re module
+import re # for working with regex and finding those patterns.
 import sys
-import argparse
+import argparse 
+import shutil
+
+def move_files_to_individual_folder(target_folder):
+    """
+    For each file in the target folder (non-recursive), create a folder named after the file (minus extension),
+    and move the file into its corresponding folder.
+    """
+    print(f"Scanning target folder for file-to-folder organization: {targer_folder}\n")
+
+    try:
+        all_items = os.lisdir(target_folder)
+    except FileNotFoundError:
+        print(f"Error: The folder '{target_folder}' does not exist.")
+        return
+
+for filename in all_items:
+    original_file_path = os.path.join(target_folder, filename)
+
+    # Only process files (skip directories)
+    if os.path.isfile(original_file_path):
+        print(f"Processing file: {filename}")
+        folder_name, file_extension = os.path.splitext(filename)
+        new_folder_fath = os.path.join(target_folder, folder_name)
+
+        if not os.path.exists(new_folder_path):
+            try:
+                os.makedirs(new_folder_path)
+                print(f"  -> Created folder: {new_folder_path}")
+            except OSError as e:
+                print(f"  -> Error creating folder {new_folder_path}: {e}")
+                continue
+        else:
+            print(f"  -> Folder '{folder_name}' already exists.")
+
+        try:
+            shutil.move(original_file_path, new_folder_path)
+            print(f"  -> Moved '{filename}' into '{new_folder_path}'\n")
+        except Exception as e:
+            print(f"  -> Error movie file {filename}: {e}\n")
+    else:
+        Print(f"Skipping directory: {filename}\n")
+print("Move-to-folder operation complete!")
+
 
 def process_filename(filename, prefix=None, postfix=None, remove_str=None, perform_clean=False):
     """
@@ -109,17 +152,20 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--prefix", help="The prefix to strip from the start of filenames.")
     parser.add_argument("-s", "--postfix", help="The postfix to strip from the end of filenames (before extension).")
     parser.add_argument("-r", "--remove", dest="remove_str", help="A string to remove from anywhere within filenames.")
-    
-    # Changed --clean to be a flag that stores True if present
+    parser.add_argument("-m", "--mkfolders", action="store_ture", help="For each file, create a folder (named after the file, minus extension) and move the file into it after renaming/cleaning.")
     parser.add_argument("-c", "--clean", action="store_true", help="Perform a general cleanup (replaces '_', '.', '-' with spaces and removes common unwanted strings).")
     
     args = parser.parse_args()
 
     # Make sure at least one action is selected
-    if not any([args.prefix, args.postfix, args.remove_str, args.clean]):
-        print("Error: You must specify at least one operation: --prefix, --postfix, --remove, or --clean.")
+    if not any([args.prefix, args.postfix, args.remove_str, args.clean, args.mkfolders]):
+        print("Error: You must specify at least one operation: --prefix, --postfix, --remove, --clean, --mkfolders.")
         parser.print_help()
         sys.exit(1)
 
     # Pass the new 'clean' argument to the function
-    rename_files_in_directory(args.directory, args.prefix, args.postfix, args.remove_str, args.clean)
+    rename_files_in_directory(args.directory, args.prefix, args.postfix, args.remove_str, args.clean args.mkfolders)
+    
+    # Optionally, move each file into ies own folder after renaming/cleaning
+    if args.mkfolders:
+        move_files_to_individual_folders(args.directory)
